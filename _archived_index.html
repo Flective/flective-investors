@@ -257,8 +257,67 @@ footer { background:var(--deep);border-top:1px solid var(--border);padding:64px 
   .hero-ctas,.inquire-ctas { flex-direction:column;align-items:flex-start; }
 }
 </style>
+<script defer src="/_vercel/insights/script.js"></script>
+<style>
+#gate { position:fixed;inset:0;z-index:99999;background:#0a0a0a;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0; }
+#gate.hidden { display:none; }
+.gate-logo { font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;letter-spacing:.14em;color:#f5f0e8;margin-bottom:8px; }
+.gate-logo span { color:#c9a96e; }
+.gate-sub { font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#948e84;margin-bottom:52px; }
+.gate-form { display:flex;flex-direction:column;align-items:center;gap:16px; }
+.gate-label { font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#948e84; }
+.gate-input { background:transparent;border:none;border-bottom:1px solid #2e2e2e;color:#f5f0e8;font-family:'Raleway',sans-serif;font-size:15px;letter-spacing:.12em;padding:10px 0;width:260px;text-align:center;outline:none;transition:border-color .2s; }
+.gate-input:focus { border-bottom-color:#c9a96e; }
+.gate-btn { font-size:10px;letter-spacing:.24em;text-transform:uppercase;background:#c9a96e;color:#0a0a0a;border:none;padding:13px 36px;cursor:pointer;font-family:'Raleway',sans-serif;font-weight:500;margin-top:8px;transition:background .2s; }
+.gate-btn:hover { background:#e2cc9e; }
+.gate-error { font-size:12px;color:#c9a96e;letter-spacing:.1em;opacity:0;transition:opacity .3s;height:16px; }
+</style>
 </head>
 <body>
+<div id="gate">
+  <div class="gate-logo">Flective <span>Investors</span></div>
+  <div class="gate-sub">Confidential Access</div>
+  <div class="gate-form">
+    <label class="gate-label">Access code</label>
+    <input type="password" class="gate-input" id="gateInput" placeholder="········" autocomplete="off">
+    <div class="gate-error" id="gateError">Incorrect access code</div>
+    <button class="gate-btn" onclick="checkGate()">Enter</button>
+  </div>
+</div>
+<script>
+(function(){
+  // SHA-256 hash of the access code. Change the hash to change the password.
+  // To generate: https://emn178.github.io/online-tools/sha256.html
+  // Current password hash — replace with your own:
+  const HASH = '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'; // = 'admin'
+  function sha256(str) {
+    const buf = new TextEncoder().encode(str);
+    return crypto.subtle.digest('SHA-256', buf).then(h =>
+      Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2,'0')).join('')
+    );
+  }
+  window.checkGate = function() {
+    const val = document.getElementById('gateInput').value;
+    sha256(val).then(h => {
+      if (h === HASH) {
+        sessionStorage.setItem('flective-investor-auth','1');
+        document.getElementById('gate').classList.add('hidden');
+      } else {
+        const err = document.getElementById('gateError');
+        err.style.opacity = '1';
+        setTimeout(() => err.style.opacity = '0', 2500);
+        document.getElementById('gateInput').value = '';
+      }
+    });
+  };
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') window.checkGate(); });
+  if (sessionStorage.getItem('flective-investor-auth') === '1') {
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('gate').classList.add('hidden');
+    });
+  }
+})();
+</script>
 <div id="cursor"></div>
 <div id="cursor-ring"></div>
 
